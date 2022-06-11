@@ -1,0 +1,162 @@
+---
+title: "Case Study 1"
+author: "Don"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readxl)
+library(tidyverse)
+library(caret)
+library(kableExtra)
+library(psych)
+```
+
+## Introduction 
+In this Case study, WE investigated the Beers data set. The data set contains a list of 2,410 US craft beers and Breweries contain 558 US breweries. We give our recommendation to a commercial beer company the top potential markets for their new beer launch based on 9 key insights derived from the data. 
+
+## Data 
+```{r}
+beers<- read.csv(file = "Beers.csv")
+Breweries<- read.csv(file = "Breweries.csv")
+```
+
+1.   How many breweries are present in each state?
+
+```{r}
+Breweries%>%
+  group_by(State)%>%
+  count(name = "NoBreweries")%>%
+  arrange(desc(NoBreweries))%>%
+  kableExtra::kable(format = "html", padding = 0, caption = "Breweries per State")
+```
+
+Colorado has the most number of breweries.
+ 
+2.   Merge beer data with the breweries data. Print the first 6 observations and the last six observations to check the merged file.  (RMD only, this does not need to be included in the presentation or the deck.)
+
+```{r}
+merged<- left_join(beers, Breweries, by= c("Brewery_id"= "Brew_ID"))%>%
+  rename("BeerName"= "Name.x", Brewery.Name="Name.y" )
+head(merged, 6)%>%
+  kableExtra::kable(format = "html", padding = 0)
+tail(merged, 6)%>%
+  kableExtra::kable(format = "html", padding = 1)
+```
+
+The head and the tail functions show how the first 6 and the last 6 rows of the data look. 
+
+3.   Address the missing values in each column.
+
+```{r}
+# Construct linear model based on non-NA pairs
+df2 <- merged %>% filter(!is.na(IBU) , !is.na(ABV) )
+
+fit <- lm(IBU ~ ABV, data = df2)
+fit2 <- lm( ABV~IBU, data = df2)
+
+summary(fit)
+# Use fit to predict the value
+df3 <- merged %>% 
+  mutate(pred = predict(fit, .),
+         pred2= predict(fit2, .) ) %>%
+  # Replace NA with pred in var1
+  mutate(IBU = ifelse(is.na(IBU), pred, IBU),
+         ABV = ifelse(is.na(ABV), pred, ABV),
+         pred= NULL,
+         pred2= NULL)%>%
+  drop_na()
+```
+
+To deal with missing values in ABV and IBU variables we used linear regression to predict the missing data. In cases where the values were not predictable, that is where both ABV an IBU were missing, the rows were removed form the data set. 
+
+5. Which state has the maximum alcoholic (ABV) beer? Which state has the most bitter (IBU) beer?
+
+```{r}
+maxdf<-df3%>%
+  group_by(State)%>%
+  summarise(IBU= mean(IBU), ABV= mean(ABV))
+
+maxdf$State[which.max(maxdf$ABV)]
+maxdf$State[which.max(maxdf$IBU)]
+```
+Nevada state has the maximum alcoholic (ABV) beer while West Virginia state has the most bitter beers. 
+
+
+6.   Comment on the summary statistics and distribution of the ABV variable.
+
+```{r}
+
+psych::describe(df3$ABV)%>%
+  kableExtra::kable(format = "html", padding = 1)
+
+hist(df3$ABV, breaks = 10, main = "ABV", xlab = "ABV", col = "purple")
+```
+
+Alcohol by volume of the beer has a mean of 0.06 with a standard deviation of 0.01. The histogram shows that the data is slightly skewed to the right, in other words the data is positively skewed.  
+
+7.   Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.  Make your best judgment of a relationship and EXPLAIN your answer.
+```{r}
+ggplot(data = df3, aes(x= ABV, y=IBU))+
+  geom_point()+
+  geom_smooth(se=F, method = "lm")+
+  labs(title = "ABV vs IBU",
+       y="International Bitterness Units of the beer",
+       x= "Alcohol by volume of the beer")+
+  theme_bw()
+```
+
+The plot show a strong positive relationship between ABV and IBU in beers. This mean as ABV increase IBU will also increase. 
+
+8.  Budweiser would also like to investigate the difference with respect to IBU and ABV between IPAs (India Pale Ales) and other types of Ale (any beer with “Ale” in its name other than IPA).  You decide to use KNN classification to investigate this relationship.  Provide statistical evidence one way or the other. You can of course assume your audience is comfortable with percentages … KNN is very easy to understand conceptually.
+
+```{r}
+#
+KNNDF<- df3%>%
+  filter(grepl(" Ale ", Style, ignore.case = T) | grepl("Ipa", df3$Style, ignore.case = T))%>%
+  mutate(type= case_when( grepl("Ipa", Style, ignore.case = T)~"Ipa",
+                          TRUE~ "Ale"))%>%
+  select(ABV,IBU,type)
+
+set.seed(300)
+#Splitting data as training and test set. Using createDataPartition() function from caret
+indxTrain <- createDataPartition(y = KNNDF$type,p = 0.75,list = FALSE)
+training <- KNNDF[indxTrain,]
+testing <- KNNDF[-indxTrain,]
+
+
+set.seed(400)
+ctrl <- trainControl(method="repeatedcv",repeats = 10) 
+#,classProbs=TRUE,summaryFunction = twoClassSummary)
+knnFit <- train(type ~ ., data = training, method = "knn", 
+                trControl = ctrl, preProcess = c("center","scale"), tuneLength = 20)
+
+#Output of kNN fit
+knnFit
+
+#Plotting yields Number of Neighbors Vs Accuracy (based on repeated cross validation)
+plot(knnFit)
+
+knnPredict <- predict(knnFit,newdata = testing )
+#Get the confusion matrix to see accuracy value and other parameter values
+confusionMatrix(knnPredict, factor(testing$type))
+
+mean(knnPredict == testing$type)
+```
+
+
+ABV and IBU can be used to predict if the beer is of IPA or ALE type with an accuracy of `r mean(knnPredict == testing$type)` which translates to `rmean(knnPredict == testing$type)*100`% accuracy rate. 
+
+9. Knock their socks off!  Find one other useful inference from the data that you feel Budweiser may be able to find value in.  You must convince them why it is important and back up your conviction with appropriate statistical evidence. 
+```{r}
+#diffrence in meant
+t.test( ABV~type, data = KNNDF)
+```
+
+There is a claim that there is no difference in ABV mean between IPA and Ale beer type. The t-test shows a p-value less than 0.05 significance level. There we reject the null hypothesis and conclude that indeed there is a difference in ABV mean of IPA and Ale beer type. 
+
+## Conclusion.
+
+Colorado states is the leading state in number of breweries. ABV and IBU have a positive correlation. There are both important variables in predicting the type of beer. Finally, some beers have higher ABV than others. 
