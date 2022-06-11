@@ -56,10 +56,37 @@ ggplot(final_median_IBU,aes(x= reorder(State,-median),median))+
 
 
 ##### Q5.Which state has the maximum alcoholic (ABV) beer? Which state has the most bitter (IBU) beer?
+merge_df_ABV = merge_df %>% filter(!is.na(ABV)) %>% 
+  group_by(State) %>% 
+  summarize(maxABV = max(ABV), count = n()) %>% 
+  arrange(desc(maxABV), desc(maxABV)) %>%  print(n=10)
+
+merge_df_IBU = merge_df %>% filter(!is.na(IBU)) %>% 
+  group_by(State) %>% 
+  summarize(maxIBU = max(IBU), count = n()) %>% 
+  arrange(desc(maxIBU), desc(maxIBU)) %>%  print(n=10)
 
 ##### Q6.Comment on the summary statistics and distribution of the ABV variable
+summary(merge_df$ABV)
+
+merge_nm_df = merge_df %>% filter(!is.na(ABV))
+merge_df_final = merge_nm_df %>% filter(!is.na(IBU))
+
+quantile(merge_df_final$ABV)
+
+ggplot(merge_df_final, aes(x=ABV)) + geom_histogram()
+ggplot(merge_df_final, aes(x=ABV)) + geom_density()
+
 
 ##### Q7.relationship between the bitterness of the beer and its alcoholic content?
+del_outliers <- subset(merge_df_final, ABV<.1) 
+plot(del_outliers$ABV,del_outliers$IBU, pch = 1,xlab = "ABV",ylab = "IBU")
+
+ggplot(del_outliers, aes(x=ABV, y=IBU)) +
+  geom_point() +
+  geom_smooth(method=loess, se=FALSE) + 
+  labs(x="ABV", y = "IBU") 
+
 
 ##### Q8
 
