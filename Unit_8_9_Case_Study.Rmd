@@ -69,8 +69,23 @@ df3 <- merged %>%
          pred2= NULL)%>%
   drop_na()
 ```
-
 To deal with missing values in ABV and IBU variables we used linear regression to predict the missing data. In cases where the values were not predictable, that is where both ABV an IBU were missing, the rows were removed form the data set. 
+
+4.   Compute the median alcohol content and international bitterness unit for each state. Plot a bar chart to compare.
+
+```{r}
+mediandf<-merged%>%
+  group_by(State)%>%
+  summarise(IBU= median(IBU, na.rm = T), ABV= median(ABV, na.rm = T))%>%
+  mutate(State = fct_reorder(State, IBU)) 
+
+ggplot(data = mediandf, aes(y=IBU, x= State, fill= State))+
+  geom_bar(stat = "identity", show.legend = F)+
+  labs(title = "IBU by States")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+## Warning: Removed 1 row containing missing values (position_stack).
 
 5. Which state has the maximum alcoholic (ABV) beer? Which state has the most bitter (IBU) beer?
 
