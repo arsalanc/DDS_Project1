@@ -21,11 +21,11 @@ head(brwr)
 
 ##### Q1.How many breweries are present in each state?
 brwr_1 <- brwr %>% group_by(State) %>% summarize(count = n())
-ggplot(brwr_1,aes(x= reorder(State,-count),count))+
-  scale_fill_viridis_c() +
+ggplot(brwr_1,aes(x= reorder(State,-count),count, y = count, fill = count))+
+  geom_text(aes(label = count), vjust = -0.2) +
+  scale_fill_gradient2(low="red", mid="pink", high="blue") +
   labs(x="State", y = "Number of Brewers") +
-  geom_bar(stat ="identity")
-
+  geom_bar(stat = "identity")
 
 ##### Q2.Merge beer data with the breweries data
 merge_df <- merge(beer, brwr, by.x = "Brewery_id", by.y = "Brew_ID", all.y = TRUE)   
@@ -84,9 +84,17 @@ plot(del_outliers$ABV,del_outliers$IBU, pch = 1,xlab = "ABV",ylab = "IBU")
 
 ggplot(del_outliers, aes(x=ABV, y=IBU)) +
   geom_point() +
-  geom_smooth(method=loess, se=FALSE) + 
+  geom_smooth(method=lm, se=FALSE) + 
   labs(x="ABV", y = "IBU") 
 
+fit1 <- lm(ABV ~ IBU, data = merge_df)
+summary(fit1)
+
+fit2 <- lm(ABV ~ IBU, data = merge_df_final)
+summary(fit2)
+
+fit3 <- lm(ABV ~ IBU, data = del_outliers)
+summary(fit3)
 
 ##### Q8
 
