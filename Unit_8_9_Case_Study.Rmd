@@ -81,7 +81,13 @@ mediandf<-merged%>%
 
 ggplot(data = mediandf, aes(y=IBU, x= State, fill= State))+
   geom_bar(stat = "identity", show.legend = F)+
-  labs(title = "IBU by States")+
+  labs(title = "IBU by State")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(data = mediandf, aes(y=ABV, x= State, fill= State))+
+  geom_bar(stat = "identity", show.legend = F)+
+  labs(title = "ABV by State")+
   theme_bw()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
