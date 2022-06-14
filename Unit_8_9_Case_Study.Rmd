@@ -96,14 +96,14 @@ ggplot(data = mediandf, aes(y=ABV, x= State, fill= State))+
 5. Which state has the maximum alcoholic (ABV) beer? Which state has the most bitter (IBU) beer?
 
 ```{r}
-maxdf<-df3%>%
-  group_by(State)%>%
-  summarise(IBU= mean(IBU), ABV= mean(ABV))
+  maxdf<-df3%>%
+    group_by(State)%>%
+    summarise(IBU= mean(IBU), ABV= mean(ABV))
 
-maxdf$State[which.max(maxdf$ABV)]
-maxdf$State[which.max(maxdf$IBU)]
+merged$State[which.max(merged$ABV)]
+merged$State[which.max(merged$IBU)]
 ```
-Nevada state has the maximum alcoholic (ABV) beer while West Virginia state has the most bitter beers. 
+Colrado state has the maximum alcoholic (ABV) beer while Oregon state has the most bitter beers. 
 
 
 6.   Comment on the summary statistics and distribution of the ABV variable.
