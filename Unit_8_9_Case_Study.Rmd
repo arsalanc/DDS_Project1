@@ -1,6 +1,6 @@
 ---
 title: "Case Study 1"
-author: "Don"
+author: "Don, Jun, Arsalan"
 output: html_document
 ---
 
@@ -19,8 +19,12 @@ In this Case study, WE investigated the Beers data set. The data set contains a 
 
 ## Data 
 ```{r}
-beers<- read.csv(file = "Beers.csv")
-Breweries<- read.csv(file = "Breweries.csv")
+Beers = read.csv(file.choose(),header = TRUE)
+Breweries = read.csv(file.choose(),header = TRUE)
+
+#beers = read.csv("D:\\MSDS\\DS 6306\\MSDS_6306_Doing-Data-Science\\Unit 8 and 9 Case Study 1\\beers.csv",header = TRUE)
+#Breweries = read.csv("D:\\MSDS\\DS 6306\\MSDS_6306_Doing-Data-Science\\Unit 8 and 9 Case Study 1\\Breweries.csv",header = TRUE)
+
 ```
 
 1.   How many breweries are present in each state?
@@ -91,6 +95,33 @@ ggplot(data = mediandf, aes(y=ABV, x= State, fill= State))+
   theme_bw()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
+
+We felt that just looking at the median values did not tell the whole story and there was other statistical measures worth looking at and comparing by state, thus we decided to also look at a box plot of the same data.
+
+```{r, fig.width=16, fig.height=8}
+library(plyr)
+#ABV
+merged_clean = merged %>% filter(!is.na(Beer_ID) & !is.na(ABV))
+
+meds <- ddply(merged_clean, .(State), summarise, med = median(ABV))
+
+merged_clean %>% ggplot(aes(x=reorder(State,ABV,median), y=ABV)) + geom_boxplot() +
+  labs(title="ABV by State", x ="State",y="ABV")+
+  geom_text(data = meds, aes(x = State, y = med, label = med),
+            size = 3, vjust = -1.5) 
+#IBU
+merged_clean2 = merged %>% dplyr::filter(!is.na(Beer_ID) & !is.na(IBU))
+
+meds <- ddply(merged_clean2, .(State), summarise, med = median(IBU))
+
+merged_clean2 %>% ggplot(aes(x=reorder(State,IBU,median), y=IBU)) + geom_boxplot() +
+  labs(title="IBU by State", x ="State",y="IBU")+
+  geom_text(data = meds, aes(x = State, y = med, label = med), 
+            size = 3, vjust = -1.5)
+```
+
+
+
 ## Warning: Removed 1 row containing missing values (position_stack).
 
 5. Which state has the maximum alcoholic (ABV) beer? Which state has the most bitter (IBU) beer?
