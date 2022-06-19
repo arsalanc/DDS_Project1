@@ -22,6 +22,8 @@ dim(Beer_Brew)
 # Q3:Address the missing values in each column
 Beer_Brew_clean = Beer_Brew %>% dplyr::filter(!is.na(Name.x) & !is.na(Beer_ID) & !is.na(ABV))
 dim(Beer_Brew_clean)
+
+
 # Q4:Compute the median alcohol content and international bitterness unit for each state. 
 #Plot a bar chart to compare.
 

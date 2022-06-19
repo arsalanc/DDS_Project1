@@ -10,8 +10,8 @@ library(e1071)
 library(caret)
 library(viridis)
 
-beer = read.csv("/Users/jk/Documents/SMU_MSDS/Doing_Data_Science/MSDS_6306_Doing-Data-Science-Master/Unit 8 and 9 Case Study 1/beers.csv",header = TRUE)
-brwr = read.csv("/Users/jk/Documents/SMU_MSDS/Doing_Data_Science/MSDS_6306_Doing-Data-Science-Master/Unit 8 and 9 Case Study 1/Breweries.csv",header = TRUE)
+beer = read.csv("D:\\MSDS\\DS 6306\\MSDS_6306_Doing-Data-Science\\Unit 8 and 9 Case Study 1\\beers.csv",header = TRUE)
+brwr = read.csv("D:\\MSDS\\DS 6306\\MSDS_6306_Doing-Data-Science\\Unit 8 and 9 Case Study 1\\Breweries.csv",header = TRUE)
 summary(beer)
 summary(brwr)
 
@@ -21,11 +21,11 @@ head(brwr)
 
 ##### Q1.How many breweries are present in each state?
 brwr_1 <- brwr %>% group_by(State) %>% summarize(count = n())
-ggplot(brwr_1,aes(x= reorder(State,-count),count, y = count, fill = count))+
-  geom_text(aes(label = count), vjust = -0.2) +
-  scale_fill_gradient2(low="red", mid="pink", high="blue") +
+ggplot(brwr_1,aes(x= reorder(State,-count),count))+
+  scale_fill_viridis_c() +
   labs(x="State", y = "Number of Brewers") +
-  geom_bar(stat = "identity")
+  geom_bar(stat ="identity")
+
 
 ##### Q2.Merge beer data with the breweries data
 merge_df <- merge(beer, brwr, by.x = "Brewery_id", by.y = "Brew_ID", all.y = TRUE)   
@@ -82,45 +82,10 @@ ggplot(merge_df_final, aes(x=ABV)) + geom_density()
 del_outliers <- subset(merge_df_final, ABV<.1) 
 plot(del_outliers$ABV,del_outliers$IBU, pch = 1,xlab = "ABV",ylab = "IBU")
 
-
-Z1_df = data.frame(ZABV = scale(merge_nm_df$ABV), 
-                      ZIBU = scale(merge_nm_df$IBU))
-
-Z2_df = data.frame(ZABV = scale(del_outliers$ABV), 
-                  ZIBU = scale(del_outliers$IBU))
-
-
-ggplot(merge_nm_df, aes(x=ABV, y=IBU)) +
-  geom_point() +
-  geom_smooth(method=lm, se=FALSE) + 
-  labs(x="ABV", y = "IBU") 
-
-
 ggplot(del_outliers, aes(x=ABV, y=IBU)) +
   geom_point() +
-  geom_smooth(method=lm, se=FALSE) + 
+  geom_smooth(method=loess, se=FALSE) + 
   labs(x="ABV", y = "IBU") 
-
-ggplot(Z_df, aes(x=ZABV, y=ZIBU)) +
-  geom_point() +
-  geom_smooth(method=lm, se=FALSE) + 
-  labs(x="ABV", y = "IBU") 
-
-
-fit1 <- lm(ABV ~ IBU, data = merge_df)
-summary(fit1)
-
-fit2 <- lm(ABV ~ IBU, data = merge_nm_df)
-summary(fit2)
-
-fit3 <- lm(ABV ~ IBU, data = del_outliers)
-summary(fit3)
-
-fit4 <- lm(ZABV ~ ZIBU, data = Z1_df)
-summary(fit4)
-
-fit5 <- lm(ZABV ~ ZIBU, data = Z2_df)
-summary(fit5)
 
 
 ##### Q8
